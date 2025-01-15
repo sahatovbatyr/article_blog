@@ -154,7 +154,7 @@ export class UserService {
 
       words.forEach( (word, index) =>  {
         queryBuilder.andWhere(`user.username LIKE :word${index}`, {
-          [`word${index}`]: `%word%`
+          [`word${index}`]: `%${word}%`
         } )
       } );
 
