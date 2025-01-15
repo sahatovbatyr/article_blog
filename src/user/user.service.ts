@@ -1,11 +1,9 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { DataSource, ILike, In, Repository } from 'typeorm';
+import {  Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.dto';
-import { plainToInstance } from 'class-transformer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateUsersRolesDto } from './dto/update-users-roles.dto';
-import { Role } from '../role/entities/role.entity';
 import { RoleService } from '../role/role.service';
 import { UpdateUserPasswordDto } from './dto/UpdateUserPassword.dto';
 import * as bcrypt from "bcrypt";
@@ -136,7 +134,7 @@ export class UserService {
     }
 
     user.password = await bcrypt.hash(userDto.newPassword, 10);
-    this.userRepository.save(user);
+    await this.userRepository.save(user);
     this.logger.log(`User: ${user.username} password changed.`);
     return;
 
@@ -146,30 +144,37 @@ export class UserService {
     const { page=1, limit = 20 } = userPageDto;
     const skip = (page-1)*limit;
 
-
-
-
     let [items, total ]:[ User[], number] = [[], 0];
 
     if ( userPageDto.text) {
       const words = userPageDto.text.split(" ").map( word => word.trim()).filter(Boolean);
-      this.logger.log("words:", words);
-      [items, total ] = await this.userRepository.findAndCount({
-       where:  words.map( word =>  ({ username: ILike(`%${word}%`)}) ),
-        skip,
-        take: limit,
-        relations: ["roles"]
-      });
-      this.logger.log("items:", items);
+
+      const queryBuilder = this.userRepository.createQueryBuilder("user")
+        .leftJoinAndSelect("user.roles", "role");
+
+      words.forEach( (word, index) =>  {
+        queryBuilder.andWhere(`user.username LIKE :word${index}`, {
+          [`word${index}`]: `%word%`
+        } )
+      } );
+
+      items = await queryBuilder
+        .skip(skip)
+        .take(limit)
+        .getMany();
+
+      total = await queryBuilder.getCount();
+
     } else {
-      [items, total ] = await this.userRepository.findAndCount({
-        skip,
+
+      [items, total] = await this.userRepository.findAndCount({
+        skip:skip,
         take: limit,
         relations: ["roles"]
-      });
+      })
+
+
     }
-
-
 
     const responsePageableDto = new ResponsePageableDto<User>();
 
