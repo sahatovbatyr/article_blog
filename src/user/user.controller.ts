@@ -3,11 +3,7 @@ import {
   Controller,
   Get, Logger,
   Param,
-  ParseIntPipe,
   Post, Res, UseGuards,
-  UseInterceptors,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
@@ -17,11 +13,13 @@ import { ReqParamParseIntPipe } from '../pipes/ReqParamParseIntPipe.pipe';
 import { UpdateUsersRolesDto } from './dto/update-users-roles.dto';
 import { Response } from 'express';
 import { UpdateUserPasswordDto } from './dto/UpdateUserPassword.dto';
-import { LoginUserDto } from './dto/LoginUserDto';
 import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PageDto, ResponsePageableDto } from './dto/UserPageDto';
 import { UserResponseDto } from './dto/UserResponseDto';
+import { Roles } from '../decorators/roles.decorator';
+import { RolesEnum } from '../enums/RolesEnum';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('/user')
 export class UserController {
@@ -40,12 +38,16 @@ export class UserController {
     return userDto;
   }
 
+  @Roles(RolesEnum.ADMIN, RolesEnum.MANAGER)
+  @UseGuards(RolesGuard)
   @Get("/get-all")
    async findAll(): Promise<User[]> {
 
     return await this.userService.findAll();
   }
 
+  @Roles(RolesEnum.ADMIN, RolesEnum.MANAGER)
+  @UseGuards(RolesGuard)
   @Post("/update-roles")
    async updateRoles(@Body( ) userDto: UpdateUsersRolesDto, @Res() res: Response  )  {
     const userTemp = await  this.userService.updateRoles(userDto);
@@ -54,6 +56,7 @@ export class UserController {
     return res.status(200).json({message: "Role succesfully updated"});
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post("/update-password")
   async updatePassword(@Body( ) userDto: UpdateUserPasswordDto, @Res() res: Response  )  {
      await  this.userService.updatePassword(userDto);
@@ -61,6 +64,8 @@ export class UserController {
   }
 
 
+  @Roles(RolesEnum.ADMIN, RolesEnum.MANAGER)
+  @UseGuards(RolesGuard)
   @Post("/create")
    async create( @Body( ) userDto: CreateUserDto): Promise<UserResponseDto>  {
 
@@ -71,6 +76,8 @@ export class UserController {
     return userRes;
   }
 
+  @Roles(RolesEnum.ADMIN, RolesEnum.MANAGER)
+  @UseGuards(RolesGuard)
   @Post("/get-page")
   async getPageable( @Body() pageDto: PageDto): Promise< ResponsePageableDto<UserResponseDto> > {
 
