@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { LoginUserDto } from '../user/dto/LoginUserDto';
@@ -11,6 +11,8 @@ import { CreateUserDto } from '../user/dto/user.dto';
 
 @Injectable()
 export class AuthService {
+
+  private readonly logger = new Logger(AuthService.name);
 
   constructor( private userService: UserService,
                private jwtService: JwtService) {
@@ -26,7 +28,7 @@ export class AuthService {
 
   async registration( userDto: CreateUserDto)  {
 
-    const candidate = await this.userService.getByUsername_FullData_noException(userDto.username);
+    const candidate = await this.userService.getByUsername(userDto.username);
 
     if (candidate) {
        throw new BadRequestException(`Username: ${userDto.username} already exists.`)
@@ -49,7 +51,7 @@ export class AuthService {
 
   private async verifyUser(userDto: LoginUserDto): Promise<User> {
 
-    const user = await this.userService.getByUsername_FullData(userDto.username);
+    const user = await this.userService.getByUsername_orThrow(userDto.username);
     const isValid = await bcrypt.compare(  userDto.password, user.password  );
 
     if ( !user || !isValid ) {
