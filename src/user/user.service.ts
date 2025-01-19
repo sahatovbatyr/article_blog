@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {  Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.dto';
@@ -20,7 +20,17 @@ export class UserService {
     private readonly roleService: RoleService
   ) {}
 
-  async getById(id: number): Promise<User> {
+  async getById(id: number): Promise<User | null> {
+    const userRec = await this.userRepository.findOne({
+      where:{id},
+      relations: ["roles"]
+    });
+
+    return userRec;
+
+  }
+
+  async getById_orThrow(id: number): Promise<User> {
     const userRec = await this.userRepository.findOne({
       where:{id},
       relations: ["roles"]
@@ -34,30 +44,7 @@ export class UserService {
 
   }
 
-  async getById_FullData(id: number): Promise<User> {
-    const userRec = await this.userRepository.findOne({
-      where:{id},
-      relations: ["roles"]
-    });
-
-    if ( !userRec) {
-      throw new NotFoundException(`User with id:${id} not found.`);
-    }
-    return userRec;
-
-  }
-
-  async getByUsername_FullData(username: string): Promise<User> {
-    const userRec = await this.getByUsername_FullData_noException(username);
-
-    if ( !userRec) {
-      throw new NotFoundException(`User ${username} not found.`);
-    }
-    return userRec;
-
-  }
-
-  async getByUsername_FullData_noException(username: string): Promise<User | null> {
+  async getByUsername(username: string): Promise<User | null> {
     const userRec = await this.userRepository.findOne({
       where:{username},
       relations: ["roles"]
@@ -67,11 +54,25 @@ export class UserService {
 
   }
 
+  async getByUsername_orThrow(username: string): Promise<User> {
+    const userRec = await this.getByUsername(username);
+
+    if ( !userRec) {
+      throw new NotFoundException(`User ${username} not found.`);
+    }
+    return userRec;
+
+  }
+
 
 
   async updateRoles(   userDto: Readonly<UpdateUsersRolesDto>): Promise<User> {
-    const user = await this.getById_FullData(userDto.id);
 
+    if ( userDto.roleIdList.length == 0) {
+      throw new BadRequestException("Specify the user's roles!");
+    }
+
+    const user = await this.getById_orThrow(userDto.id);
     const roles = await this.roleService.getRolesByIdList(userDto.roleIdList);
 
     if (  roles.length != userDto.roleIdList.length ) {
@@ -88,6 +89,10 @@ export class UserService {
 
   async findAll(): Promise<User[]> {
     return await this.userRepository.find();
+  }
+
+  async comparePassword(unhashedPassword: string, hashedPassword:string) {
+    return await bcrypt.compare(  unhashedPassword, hashedPassword );
   }
 
   async create(userDto: CreateUserDto): Promise<User> {
@@ -111,7 +116,12 @@ export class UserService {
     return savedUser;
   }
 
-  async updatePassword( userDto: UpdateUserPasswordDto ) {
+  async updatePassword( userDto: UpdateUserPasswordDto, author: string ) {
+
+    if ( author !== userDto.username) {
+      throw new ForbiddenException("Access Denied. The password can be changed only by the owner.");
+    }
+    this.logger.log(`trying updatePassword() for user: ${userDto.username}`);
 
     if ( userDto.newPassword != userDto.newPasswordConfirmation ) {
       throw new BadRequestException("new Password and confirmation not match.");

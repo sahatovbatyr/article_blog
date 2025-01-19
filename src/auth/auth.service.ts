@@ -4,7 +4,6 @@ import { UpdateAuthDto } from './dto/update-auth.dto';
 import { LoginUserDto } from '../user/dto/LoginUserDto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from  "bcrypt";
 import { User } from '../user/user.entity';
 import { Payload } from './entities/Payload';
 import { CreateUserDto } from '../user/dto/user.dto';
@@ -35,7 +34,8 @@ export class AuthService {
     }
 
     const user = await this.userService.create(userDto);
-    return this.generateToken(user);
+
+    return await this.generateToken(user);
 
   }
 
@@ -52,7 +52,9 @@ export class AuthService {
   private async verifyUser(userDto: LoginUserDto): Promise<User> {
 
     const user = await this.userService.getByUsername_orThrow(userDto.username);
-    const isValid = await bcrypt.compare(  userDto.password, user.password  );
+    this.logger.log("user:", JSON.stringify(user));
+
+    const isValid =await this.userService.comparePassword(  userDto.password, user.password  );
 
     if ( !user || !isValid ) {
       throw new UnauthorizedException("Error. User or password not match.")

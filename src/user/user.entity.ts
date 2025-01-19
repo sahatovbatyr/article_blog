@@ -12,7 +12,6 @@ export class User {
   username!: string;
 
   @Column({type:"varchar", nullable:false})
-  @Column({ select: false })
   password!: string;
 
   @Column({type:"boolean", nullable:false, default:false })
