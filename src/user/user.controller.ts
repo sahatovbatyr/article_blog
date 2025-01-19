@@ -3,7 +3,7 @@ import {
   Controller,
   Get, Logger,
   Param,
-  Post, Res, UseGuards,
+  Post, Req, Res, UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
@@ -11,7 +11,7 @@ import { CreateUserDto } from './dto/user.dto';
 import * as console from 'node:console';
 import { ReqParamParseIntPipe } from '../pipes/ReqParamParseIntPipe.pipe';
 import { UpdateUsersRolesDto } from './dto/update-users-roles.dto';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { UpdateUserPasswordDto } from './dto/UpdateUserPassword.dto';
 import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -20,6 +20,7 @@ import { UserResponseDto } from './dto/UserResponseDto';
 import { Roles } from '../decorators/roles.decorator';
 import { RolesEnum } from '../enums/RolesEnum';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { UserRequestDto } from './dto/UserRequestDto';
 
 @Controller('/user')
 export class UserController {
@@ -58,8 +59,11 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Post("/update-password")
-  async updatePassword(@Body( ) userDto: UpdateUserPasswordDto, @Res() res: Response  )  {
-     await  this.userService.updatePassword(userDto);
+  async updatePassword(@Body( ) userDto: UpdateUserPasswordDto, @Req() req: any, @Res() res: Response  )  {
+    // this.logger.log("req.user:", JSON.stringify(req.user) );
+
+    const reqUser: UserRequestDto =  req.user as UserRequestDto;
+     await  this.userService.updatePassword(userDto, reqUser.username);
     return res.status(200).json({message: "Password succesfully updated"});
   }
 
