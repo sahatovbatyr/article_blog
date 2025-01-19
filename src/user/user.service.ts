@@ -20,7 +20,7 @@ export class UserService {
     private readonly roleService: RoleService
   ) {}
 
-  async getById(id: number): Promise<User> {
+  async getById_orThrow(id: number): Promise<User> {
     const userRec = await this.userRepository.findOne({
       where:{id},
       relations: ["roles"]
@@ -34,21 +34,39 @@ export class UserService {
 
   }
 
-  async getById_FullData(id: number): Promise<User> {
-    const userRec = await this.userRepository.findOne({
-      where:{id},
-      relations: ["roles"]
+  async getByUsername( username: string) {
+    return  await this.userRepository.findOne({
+      where: { username: username },
+      relations:["roles"]
     });
-
-    if ( !userRec) {
-      throw new NotFoundException(`User with id:${id} not found.`);
-    }
-    return userRec;
-
   }
 
-  async getByUsername_FullData(username: string): Promise<User> {
-    const userRec = await this.getByUsername_FullData_noException(username);
+  async getByUsername_orThrow(username: string): Promise<User> {
+
+    const user = this.getByUsername(username);
+
+    if ( !user ) {
+      throw new NotFoundException("Username or password are wrong not match.");
+    }
+
+    return user;
+  }
+
+  // async getById_FullData(id: number): Promise<User> {
+  //   const userRec = await this.userRepository.findOne({
+  //     where:{id},
+  //     relations: ["roles"]
+  //   });
+  //
+  //   if ( !userRec) {
+  //     throw new NotFoundException(`User with id:${id} not found.`);
+  //   }
+  //   return userRec;
+  //
+  // }
+
+  async getByUsername_orThrow(username: string): Promise<User> {
+    const userRec = await this.getByUsername(username);
 
     if ( !userRec) {
       throw new NotFoundException(`User ${username} not found.`);
@@ -57,20 +75,20 @@ export class UserService {
 
   }
 
-  async getByUsername_FullData_noException(username: string): Promise<User | null> {
-    const userRec = await this.userRepository.findOne({
-      where:{username},
-      relations: ["roles"]
-    });
-
-    return userRec;
-
-  }
+  // async getByUsername_FullData(username: string): Promise<User | null> {
+  //   const userRec = await this.userRepository.findOne({
+  //     where:{username},
+  //     relations: ["roles"]
+  //   });
+  //
+  //   return userRec;
+  //
+  // }
 
 
 
   async updateRoles(   userDto: Readonly<UpdateUsersRolesDto>): Promise<User> {
-    const user = await this.getById_FullData(userDto.id);
+    const user = await this.getById_orThrow(userDto.id);
 
     const roles = await this.roleService.getRolesByIdList(userDto.roleIdList);
 
