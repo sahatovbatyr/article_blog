@@ -17,6 +17,12 @@ export class User {
   @Column({type:"boolean", nullable:false, default:false })
   is_active!: string;
 
+  @Column({type:'varchar', nullable: false, unique:true})
+  email!: string;
+
+  @Column({ type:'boolean', nullable:false, default:false})
+  is_email_verified!:boolean;
+
 
   @ManyToMany(() => Role )
   @JoinTable({
