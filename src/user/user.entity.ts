@@ -17,7 +17,7 @@ export class User {
   @Column({type:"boolean", nullable:false, default:false })
   is_active!: string;
 
-  @Column({type:'varchar', nullable: false, unique:true})
+  @Column({type:'varchar', nullable: true, unique:true})
   email!: string;
 
   @Column({ type:'boolean', nullable:false, default:false})

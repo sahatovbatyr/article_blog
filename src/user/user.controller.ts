@@ -21,6 +21,7 @@ import { Roles } from '../decorators/roles.decorator';
 import { RolesEnum } from '../enums/RolesEnum';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRequestDto } from './dto/UserRequestDto';
+import { UpdateUsersEmailDto } from './dto/UpdateUsersEmailDto';
 
 @Controller('/user')
 export class UserController {
@@ -65,6 +66,15 @@ export class UserController {
     const reqUser: UserRequestDto =  req.user as UserRequestDto;
      await  this.userService.updatePassword(userDto, reqUser.username);
     return res.status(200).json({message: "Password succesfully updated"});
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("/update-email")
+  async updateEmail(@Body( ) userDto: UpdateUsersEmailDto, @Req() req: any, @Res() res: Response  )  {
+
+    const reqUser: UserRequestDto =  req.user as UserRequestDto;
+    await  this.userService.updateEmail(userDto, reqUser.username);
+    return res.status(200).json({message: "Email succesfully updated"});
   }
 
 
