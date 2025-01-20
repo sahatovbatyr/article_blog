@@ -27,6 +27,10 @@ export class AuthService {
 
   async registration( userDto: CreateUserDto)  {
 
+    if ( !userDto.username) {
+      userDto.username = userDto.email;
+    }
+
     const candidate = await this.userService.getByUsername(userDto.username);
 
     if (candidate) {
@@ -51,7 +55,16 @@ export class AuthService {
 
   private async verifyUser(userDto: LoginUserDto): Promise<User> {
 
-    const user = await this.userService.getByUsername_orThrow(userDto.username);
+    let user: User ;
+
+    if ( userDto.username ) {
+       user = await this.userService.getByUsername_orThrow(userDto.username);
+    } else if ( userDto.email ) {
+       user = await this.userService.getByEmail_orThrow(userDto.email);
+    } else {
+      throw new BadRequestException("Enter username or email to login.");
+    }
+
     this.logger.log("user:", JSON.stringify(user));
 
     const isValid =await this.userService.comparePassword(  userDto.password, user.password  );

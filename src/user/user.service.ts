@@ -8,6 +8,7 @@ import { RoleService } from '../role/role.service';
 import { UpdateUserPasswordDto } from './dto/UpdateUserPassword.dto';
 import * as bcrypt from "bcrypt";
 import { PageDto, ResponsePageableDto } from './dto/UserPageDto';
+import { UpdateUsersEmailDto } from './dto/UpdateUsersEmailDto';
 
 @Injectable()
 export class UserService {
@@ -64,6 +65,29 @@ export class UserService {
 
   }
 
+  async getByEmail(email: string): Promise<User | null> {
+    const userRec = await this.userRepository.findOne({
+      where:{email},
+      relations: ["roles"]
+    });
+
+    return userRec;
+
+  }
+
+  async getByEmail_orThrow(email: string): Promise<User> {
+    const userRec = await this.userRepository.findOne({
+      where:{email},
+      relations: ["roles"]
+    });
+
+    if ( !userRec) {
+      throw new NotFoundException(`User with email: ${email} not found.`);
+    }
+    return userRec;
+
+  }
+
 
 
   async updateRoles(   userDto: Readonly<UpdateUsersRolesDto>): Promise<User> {
@@ -87,6 +111,19 @@ export class UserService {
 
   }
 
+  async updateEmail(   userDto: Readonly<UpdateUsersEmailDto>, author:string): Promise<User> {
+
+    if ( author !== userDto.username) {
+      throw new ForbiddenException("Access Denied. The email can be changed only by the owner.");
+    }
+
+    const user = await this.getByUsername_orThrow(userDto.username);
+    user.email = userDto.email;
+    const res = await this.userRepository.save(user);
+    return res;
+
+  }
+
   async findAll(): Promise<User[]> {
     return await this.userRepository.find();
   }
@@ -101,6 +138,13 @@ export class UserService {
 
     if ( user ) {
       throw new BadRequestException(`Error. Username: ${userDto.username} already exists.`);
+    }
+
+    if ( userDto.email) {
+      const userByEmail  = await this.userRepository.findOneBy({email: userDto.email});
+      if ( userByEmail )  {
+        throw new BadRequestException(`Error. Email: ${userDto.email} already exists.`)
+      }
     }
 
     const role = await this.roleService.findByTitle("USER");
