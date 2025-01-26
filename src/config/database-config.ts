@@ -1,8 +1,8 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EnvKeys } from './app.env';
 import { User } from '../user/user.entity';
 import { Role } from '../role/entities/role.entity';
+import { EnvKeys } from '../enums/EnvKeys';
 
 export const DatabaseConfig = TypeOrmModule.forRootAsync({
   imports: [ConfigModule],
