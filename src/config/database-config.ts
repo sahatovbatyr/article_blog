@@ -16,6 +16,10 @@ export const DatabaseConfig = TypeOrmModule.forRootAsync({
     database: String( configService.get(EnvKeys.DB_NAME)),
     entities: [ User, Role  ],
     synchronize: true,
+    charset: 'utf8',
+    // collation: 'utf8_general_ci',
+
+
 
   })
 
