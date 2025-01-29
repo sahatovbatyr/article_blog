@@ -1,16 +1,7 @@
 import { UserController } from '../../src/user/user.controller';
 import { UserService } from '../../src/user/user.service';
-import { INestApplication, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
-import { ConfigModule } from '@nestjs/config';
-import { appEnv } from '../../src/config/app.env';
-import process from 'node:process';
-import { UserModule } from '../../src/user/user.module';
-import { User } from '../../src/user/user.entity';
-import { CreateUserDto } from '../../src/user/dto/user.dto';
-import * as request from 'supertest';
-import { plainToInstance } from 'class-transformer';
-import { UserResponseDto } from '../../src/user/dto/UserResponseDto';
 import { JwtAuthGuard } from '../../src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../src/auth/guards/roles.guard';
 import { Reflector } from '@nestjs/core';
