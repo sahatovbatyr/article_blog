@@ -34,7 +34,7 @@ export class UserController {
   @Get("/id/:id")
    async getById(@Param("id", ReqParamParseIntPipe ) id: number): Promise<UserResponseDto> {
 
-    const user =  await this.userService.getById(id);
+    const user =  await this.userService.getById_orThrow(id);
     const userDto = plainToInstance(UserResponseDto, user );
 
     return userDto;

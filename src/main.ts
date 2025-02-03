@@ -4,10 +4,11 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import * as console from 'node:console';
 import * as process from 'node:process';
-import { AppEnvInterface, EnvKeys } from './config/app.env';
 import { BadRequestException, } from '@nestjs/common';
 import { ValidationException } from './exceptions/validation.exception';
 import { ValidationPipe } from './pipes/validation.pipe';
+import { AppEnvInterface } from './config/AppEnvInterface';
+import { EnvKeys } from './enums/EnvKeys';
 
 
 

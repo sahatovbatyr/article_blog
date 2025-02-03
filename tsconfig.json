@@ -6,7 +6,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
+    "target": "es2022",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./src",
@@ -18,10 +18,12 @@
     "strictFunctionTypes": true,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "lib": ["ES2021", "Node"],
+    "lib": ["esnext", "dom"],
 //    "types": ["node"],
     "strict": true,                    // включение строгой типизации
-    "esModuleInterop": true            // для корректной работы с модулями
+    "esModuleInterop": true,            // для корректной работы с модулями
+    "useDefineForClassFields": true,    // Требуется для современных классов
+    "resolveJsonModule": true           // Для импорта JSON-файлов
   },
   "include": [
     "src/**/*.ts"
