@@ -76,10 +76,7 @@ export class UserService {
   }
 
   async getByEmail_orThrow(email: string): Promise<User> {
-    const userRec = await this.userRepository.findOne({
-      where:{email},
-      relations: ["roles"]
-    });
+    const userRec = await this.getByEmail(email);
 
     if ( !userRec) {
       throw new NotFoundException(`User with email: ${email} not found.`);
