@@ -15,4 +15,9 @@ export class AppController {
     return "Good By!";
   }
 
+  @Get("/say-goodby-2")
+  getGoodBy(): string {
+    return "Good By!";
+  }
+
 }
