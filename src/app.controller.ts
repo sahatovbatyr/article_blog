@@ -9,4 +9,10 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get("/say-goodby")
+  getGoodBy(): string {
+    return "Good By!";
+  }
+
 }
