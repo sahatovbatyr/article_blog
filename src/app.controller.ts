@@ -14,4 +14,9 @@ export class AppController {
   getHello(): string {
     return "Hi";
   }
+
+  @Get("/say-goodby-3")
+  getGoodBy(): string {
+    return "Good By3!";
+  }
 }
