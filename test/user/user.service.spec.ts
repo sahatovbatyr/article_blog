@@ -5,6 +5,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { RoleService } from '../../src/role/role.service';
+import exp = require('node:constants');
 
 describe('UserService', () => {
   let userService: UserService;
@@ -14,13 +15,16 @@ describe('UserService', () => {
     findOne: jest.fn(),
   };
 
-  const mockRoleService = {
-    // someMethod: jest.fn(), // можно не указывать методы, если они не используются
-  };
+  // const mockUserService = {
+  //   getByUsername: jest.fn(),
+  // };
+
+
 
   const mockUser = {
     id: 1,
     username: 'Test User',
+    email: 'test@test.com',
     roles: [{ id: 1, title: 'Admin' }],
   };
 
@@ -98,6 +102,108 @@ describe('UserService', () => {
         relations: ['roles'],
       });
     });
+  });
+
+  describe("getByUsername", ()=> {
+
+    it('should return user by username', async () => {
+      mockUserRepository.findOne.mockResolvedValue(mockUser);
+
+      const result = await userService.getByUsername(mockUser.username);
+
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: {username: mockUser.username},
+        relations: ["roles"]
+      });
+
+      expect(result).toEqual(mockUser);
+    });
+
+    it('should return null when user not found by username', async () => {
+
+      mockUserRepository.findOne.mockResolvedValue(null);
+
+      const result = await userService.getByUsername("jack");
+
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { username:"jack"},
+        relations: ["roles"]
+      });
+
+      expect(result).toBeNull();
+
+    });
+
+  });
+
+  describe('getByUsername_orThrow', () => {
+    it('should return a user by username or throw an exception if not found', async () => {
+
+      // mocking mothod getByUsername
+      userService.getByUsername = jest.fn().mockResolvedValue(mockUser);
+      const result = await userService.getByUsername_orThrow(mockUser.username);
+
+      expect(result).toEqual(mockUser);
+      expect(userService.getByUsername).toHaveBeenCalledWith(mockUser.username);
+
+      // Mocking method getByUsername to return null
+      userService.getByUsername = jest.fn().mockResolvedValue(null);
+
+      await expect(userService.getByUsername_orThrow('NonExistentUser'))
+        .rejects.toThrow(NotFoundException);
+
+      expect(userService.getByUsername).toHaveBeenCalledWith('NonExistentUser');
+
+    });
+  });
+
+  describe('getByEmail', () => {
+
+    it('should return user by email', async () =>  {
+      mockUserRepository.findOne.mockResolvedValue(mockUser);
+      const result = await userService.getByEmail(mockUser.email);
+
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: {email: mockUser.email},
+        relations:["roles"]
+      });
+      expect(result).toEqual(mockUser);
+
+
+    });
+
+    it('should return null if user not exists by email', async () => {
+
+      mockUserRepository.findOne.mockResolvedValue(null);
+      const result = await userService.getByEmail(mockUser.email);
+
+      expect(result).toBeNull();
+    });
+
+  });
+
+  describe("getByEmail_orThrow", () => {
+
+    it('should throw notFoundexcption if user not found by email', async () => {
+
+      userService.getByEmail = jest.fn().mockResolvedValue(mockUser);
+      const result = await userService.getByEmail_orThrow(mockUser.email);
+
+      // user found by email
+      expect( userService.getByEmail).toHaveBeenCalledWith(mockUser.email);
+      expect(result).toEqual(mockUser);
+
+      //user not found
+      userService.getByEmail = jest.fn().mockResolvedValue(null);
+
+      await expect(userService.getByEmail_orThrow(mockUser.email)).rejects.toThrow(
+        new NotFoundException(`User with email: ${mockUser.email} not found.`)
+      );
+      expect(userService.getByEmail).toHaveBeenCalledWith(mockUser.email);
+
+    });
+
+
   });
 
 
