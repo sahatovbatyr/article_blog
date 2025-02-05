@@ -3,13 +3,13 @@ import { User } from '../../src/user/user.entity';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { RoleService } from '../../src/role/role.service';
-import exp = require('node:constants');
 
 describe('UserService', () => {
   let userService: UserService;
   let userRepository: Repository<User>;
+  let roleService: RoleService;
 
   const mockUserRepository = {
     findOne: jest.fn(),
@@ -18,8 +18,6 @@ describe('UserService', () => {
   // const mockUserService = {
   //   getByUsername: jest.fn(),
   // };
-
-
 
   const mockUser = {
     id: 1,
@@ -33,6 +31,7 @@ describe('UserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
+        RoleService,
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
@@ -46,6 +45,7 @@ describe('UserService', () => {
 
     userService = module.get(UserService);
     userRepository = module.get(getRepositoryToken(User));
+    roleService = module.get(RoleService);
   });
 
   afterEach(() => {
@@ -94,7 +94,7 @@ describe('UserService', () => {
       mockUserRepository.findOne.mockResolvedValue(null);
 
       await expect(userService.getById_orThrow(999)).rejects.toThrow(
-        new NotFoundException('User with id:999 not found.')
+        new NotFoundException('User with id:999 not found.'),
       );
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
@@ -104,7 +104,7 @@ describe('UserService', () => {
     });
   });
 
-  describe("getByUsername", ()=> {
+  describe('getByUsername', () => {
 
     it('should return user by username', async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
@@ -112,8 +112,8 @@ describe('UserService', () => {
       const result = await userService.getByUsername(mockUser.username);
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: {username: mockUser.username},
-        relations: ["roles"]
+        where: { username: mockUser.username },
+        relations: ['roles'],
       });
 
       expect(result).toEqual(mockUser);
@@ -123,11 +123,11 @@ describe('UserService', () => {
 
       mockUserRepository.findOne.mockResolvedValue(null);
 
-      const result = await userService.getByUsername("jack");
+      const result = await userService.getByUsername('jack');
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: { username:"jack"},
-        relations: ["roles"]
+        where: { username: 'jack' },
+        relations: ['roles'],
       });
 
       expect(result).toBeNull();
@@ -159,13 +159,13 @@ describe('UserService', () => {
 
   describe('getByEmail', () => {
 
-    it('should return user by email', async () =>  {
+    it('should return user by email', async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
       const result = await userService.getByEmail(mockUser.email);
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: {email: mockUser.email},
-        relations:["roles"]
+        where: { email: mockUser.email },
+        relations: ['roles'],
       });
       expect(result).toEqual(mockUser);
 
@@ -182,7 +182,7 @@ describe('UserService', () => {
 
   });
 
-  describe("getByEmail_orThrow", () => {
+  describe('getByEmail_orThrow', () => {
 
     it('should throw notFoundexcption if user not found by email', async () => {
 
@@ -190,16 +190,102 @@ describe('UserService', () => {
       const result = await userService.getByEmail_orThrow(mockUser.email);
 
       // user found by email
-      expect( userService.getByEmail).toHaveBeenCalledWith(mockUser.email);
+      expect(userService.getByEmail).toHaveBeenCalledWith(mockUser.email);
       expect(result).toEqual(mockUser);
 
       //user not found
       userService.getByEmail = jest.fn().mockResolvedValue(null);
 
       await expect(userService.getByEmail_orThrow(mockUser.email)).rejects.toThrow(
-        new NotFoundException(`User with email: ${mockUser.email} not found.`)
+        new NotFoundException(`User with email: ${mockUser.email} not found.`),
       );
       expect(userService.getByEmail).toHaveBeenCalledWith(mockUser.email);
+
+    });
+
+  });
+
+  describe('updateRoles', () => {
+    it('should update users when roles correctly', async () => {
+      const userDto = { id: 1, roleIdList: [1, 2] };
+      const userInDb = { id: 1, roles: [] };
+      const roles = [{ id: 1 }, { id: 2 }];
+
+      userService.getById_orThrow = jest.fn().mockResolvedValue(userInDb);
+      roleService.getRolesByIdList = jest.fn().mockResolvedValue(roles);
+      userRepository.save = jest.fn().mockResolvedValue({ ...userInDb, roles });
+
+      const result = await userService.updateRoles(userDto);
+
+      expect(result.roles).toEqual(roles);
+      expect(userService.getById_orThrow).toHaveBeenCalledWith(userDto.id);
+      expect(roleService.getRolesByIdList).toHaveBeenCalledWith(userDto.roleIdList);
+      expect(userRepository.save).toHaveBeenCalledWith(userInDb);
+    });
+
+    it('should throw BadRequestException if roleIdList is empty', async () => {
+      const userDto = { id: 1, roleIdList: [] };
+      await expect(userService.updateRoles(userDto)).rejects.toThrow(
+        new BadRequestException('Specify the user\'s roles!'),
+      );
+
+    });
+
+    it('should throw BadRequestException if user not found.', async () => {
+      const userDto = { id: 1, roleIdList: [1, 2] };
+
+      userService.getById_orThrow = jest.fn().mockRejectedValue(
+        new NotFoundException(`User with id:${userDto.id} not found.`),
+      );
+
+      await expect(userService.updateRoles(userDto)).rejects.toThrow(
+        new NotFoundException(`User with id:${userDto.id} not found.`),
+      );
+      expect(userService.getById_orThrow).toHaveBeenCalledWith(userDto.id);
+    });
+
+    it('should throw BadRequestException if userDto.roles are incorrect ', async () => {
+      const userDto = { id: 1, roleIdList: [1, 5] };
+      const mockUser = { id: 1, roles: [] };
+      const rolesDb = [{ id: 1 }];
+
+      userService.getById_orThrow = jest.fn().mockResolvedValue(mockUser);
+      roleService.getRolesByIdList = jest.fn().mockResolvedValue(rolesDb);
+
+      await expect(userService.updateRoles(userDto)).rejects.toThrow(
+        new BadRequestException('Incorrect roles.'),
+      );
+
+      expect(userService.getById_orThrow).toHaveBeenCalledWith(userDto.id);
+      expect(roleService.getRolesByIdList).toHaveBeenCalledWith(userDto.roleIdList);
+    });
+
+
+  });
+
+  describe('updateEmail', () => {
+
+    it('should update email successfully when valid data is provided ', () => {
+
+    });
+
+    it('should throw ForbiddenException if user tries to update another user\'s email', () => {
+
+    });
+
+    it('should throw NotFoundException if user not found ', () => {
+
+    });
+
+    it('should throw BadRequestException if new email is already in use ', () => {
+
+    });
+
+    it('should throw BadRequestException if provided id is invalid ', () => {
+
+    });
+
+    it('should throw ForbiddenException if user tries to update email of another user ', () => {
 
     });
 
