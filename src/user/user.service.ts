@@ -133,9 +133,7 @@ export class UserService {
   }
 
   async create(userDto: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.findOneBy({
-      username: userDto.username,
-    });
+    const user = await this.getByUsername(userDto.username);
 
     if (user) {
       throw new BadRequestException(
@@ -143,17 +141,11 @@ export class UserService {
       );
     }
 
-    if (userDto.email) {
-      const userByEmail = await this.userRepository.findOneBy({
-        email: userDto.email,
-      });
-      if (userByEmail) {
-        throw new BadRequestException(
-          `Error. Email: ${userDto.email} already exists.`,
-        );
-      }
+    if (userDto.email && (await this.getByEmail(userDto.email))) {
+      throw new BadRequestException(
+        `Error. Email: ${userDto.email} already exists.`,
+      );
     }
-
     const role = await this.roleService.findByTitle('USER');
 
     const userRec = await this.userRepository.create(userDto);
