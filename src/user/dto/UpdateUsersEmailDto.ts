@@ -1,7 +1,6 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class UpdateUsersEmailDto {
-
   @IsString()
   @IsNotEmpty()
   username!: string;
@@ -9,5 +8,5 @@ export class UpdateUsersEmailDto {
   @IsString()
   @IsNotEmpty()
   @IsEmail()
-  email!:string;
+  email!: string;
 }
