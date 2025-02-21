@@ -1,14 +1,13 @@
-import { RoleDto } from '../../role/dto/role.dto';
-import { IsArray, IsInt, IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-
+import { IsArray, IsInt, IsNotEmpty, IsNumber } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUsersRolesDto {
-
+  @ApiProperty({ example: '1', description: 'User id' })
   @IsNumber()
   @IsNotEmpty()
   readonly id!: number;
 
+  @ApiProperty({ example: '[ 1, 2, 3]', description: 'Role id List' })
   @IsNotEmpty()
   @IsArray()
   @IsInt({ each: true })

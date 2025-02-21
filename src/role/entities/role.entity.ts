@@ -1,14 +1,13 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 
-@Entity({name: "roles"})
+@Entity({ name: 'roles' })
 export class Role {
-
+  @ApiProperty({ example: '1', description: 'User Role id' })
   @PrimaryGeneratedColumn()
-   id!: number;
+  id!: number;
 
-  @Column({ type:"varchar", nullable: false, unique: true })
-   title!: string;
-
-
-
+  @ApiProperty({ example: 'ADMIN', description: 'Users role' })
+  @Column({ type: 'varchar', nullable: false, unique: true })
+  title!: string;
 }
