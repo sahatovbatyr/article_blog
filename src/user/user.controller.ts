@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Logger, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './user.entity';
 import { CreateUserDto } from './dto/user.dto';
 import * as console from 'node:console';
 import { ReqParamParseIntPipe } from '../pipes/ReqParamParseIntPipe.pipe';
@@ -19,7 +18,7 @@ import { UpdateUsersEmailDto } from './dto/UpdateUsersEmailDto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MessageDto } from '../common/message.dto';
 
-@ApiTags('user')
+@ApiTags('USER')
 @Controller('user')
 export class UserController {
   private readonly logger = new Logger(UserController.name);
