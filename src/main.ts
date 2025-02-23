@@ -21,15 +21,14 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('cats')
     .build();
-  const documentFactory = () =>
-    SwaggerModule.createDocument(app, swaggerConfig);
+  const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/doc', app, documentFactory);
 
   app.useGlobalPipes(validationPipe);
 
-  await app.listen(host_port, () =>
-    console.log(`Server started on ${host_port}`),
-  );
+  app.setGlobalPrefix('api');
+
+  await app.listen(host_port, () => console.log(`Server started on ${host_port}`));
 }
 
 void bootstrap();
