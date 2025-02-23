@@ -7,21 +7,16 @@ import { EnvKeys } from '../enums/EnvKeys';
 export const DatabaseConfig = TypeOrmModule.forRootAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
-  useFactory: async (configService: ConfigService)=> ({
+  useFactory: async (configService: ConfigService) => ({
     type: 'postgres',
-    host: configService.get(EnvKeys.DB_HOST || "localhost") ,
-    port: Number( configService.get(EnvKeys.DB_PORT )) ,
-    username: configService.get(EnvKeys.DB_USER) || "postgres",
-    password: configService.get(EnvKeys.DB_PASSWORD) || "postgres",
-    database: String( configService.get(EnvKeys.DB_NAME)),
-    entities: [ User, Role  ],
+    host: configService.get(EnvKeys.DB_HOST || 'localhost'),
+    port: Number(configService.get(EnvKeys.DB_PORT)),
+    username: configService.get(EnvKeys.DB_USER) || 'postgres',
+    password: configService.get(EnvKeys.DB_PASSWORD) || 'postgres',
+    database: String(configService.get(EnvKeys.DB_NAME)),
+    entities: [User, Role],
     synchronize: true,
     charset: 'utf8',
     // collation: 'utf8_general_ci',
-
-
-
-  })
-
-
+  }),
 });
