@@ -1,0 +1,48 @@
+version: "3.8"
+
+x-backend-base: &backend-base
+  build:
+    context: .
+    dockerfile: ./Dockerfile
+
+x-backend: &backend
+  image: app:my_nest_app
+  <<: *backend-base
+
+services:
+
+  postgres_serv:
+    image: postgres:latest
+    restart: always
+    container_name: my_postgres_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: article_blog
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+  nestapp:
+    build:
+      context: .  # Указывает на текущую директорию, где находится Dockerfile
+    container_name: my_nest_app
+    ports:
+      - "7000:7000"  # Открываем порт 3000 на хосте и мапим его на контейнерный порт
+    #    environment:
+    #      NODE_ENV: production  # Переменные окружения, если нужно
+    #    volumes:
+    #      - .:/app  # Монтируем текущую директорию на /app в контейнере для горячей перезагрузки
+    restart: always  # Контейнер будет перезапущен при сбое
+    env_file:
+      - .development.env
+    volumes:
+      - ./src:/my_backend_app/src
+      - /app/node_modules
+    command: npm run start:dev
+    depends_on:
+      - postgres_serv
+volumes:
+  postgres_data:
